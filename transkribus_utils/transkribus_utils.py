@@ -147,7 +147,7 @@ class PagePlusTranskribusUtils:
             result["transcript_url"] = doc_xml.xpath(
                 "//tsList/transcripts[1]/url/text()"
             )[0]
-            result["fileName"] = doc_xml.xpath(
+            result["file_name"] = doc_xml.xpath(
                 "//tsList/transcripts[1]/fileName/text()"
             )[0]
             result["pagestatus"] = doc_xml.xpath(
@@ -159,7 +159,7 @@ class PagePlusTranskribusUtils:
             result["timestamp"] = doc_xml.xpath(
                 "//tsList/transcripts[1]/timestamp/text()"
             )[0]
-            result["md5Sum"] = doc_xml.xpath(
+            result["md5sum"] = doc_xml.xpath(
                 "//tsList/transcripts[1]/md5Sum/text()"
             )[0]
             result["img_url"] = doc_xml.xpath("./url/text()")[0]
