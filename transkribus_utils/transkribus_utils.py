@@ -124,7 +124,7 @@ class PagePlusTranskribusUtils:
         else:
             return response.ok
 
-    def get_fulldoc_md(self, doc_id, col_id, page_id="1"):
+    def get_fulldoc_md(self, doc_id, col_id, page_id="1", transcript="1"):
         """Helper function to interact with TRANSKRIBUS document endpoint
         :param col_id: The ID of a TRANSKRIBUS Collection
         :param doc_id: The ID of TRANSKRIBUS Document
@@ -139,33 +139,19 @@ class PagePlusTranskribusUtils:
                 "doc_id": doc_id,
                 "base_url": self.base_url,
                 "col_id": col_id,
-                "page_id": page_id,
+                "page_id": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/pageId/text()")[0],
+                "pageNr": page_id,
                 "session_id": self.login_cookie["JSESSIONID"],
-            }
-            result["doc_url"] = url
-            result["doc_xml"] = doc_xml
-            result["transcript_url"] = doc_xml.xpath(
-                "//tsList/transcripts[1]/url/text()"
-            )[0]
-            result["file_name"] = doc_xml.xpath(
-                "//tsList/transcripts[1]/fileName/text()"
-            )[0]
-            result["pagestatus"] = doc_xml.xpath(
-                "//tsList/transcripts[1]/status/text()"
-            )[0]
-            result["user"] = doc_xml.xpath(
-                "//tsList/transcripts[1]/userName/text()"
-            )[0]
-            result["timestamp"] = doc_xml.xpath(
-                "//tsList/transcripts[1]/timestamp/text()"
-            )[0]
-            result["md5sum"] = doc_xml.xpath(
-                "//tsList/transcripts[1]/md5Sum/text()"
-            )[0]
-            result["img_url"] = doc_xml.xpath("./url/text()")[0]
-            result["extra_info"] = self.get_doc_md(
-                doc_id, col_id=col_id
-            )
+                "doc_url": url,
+                "doc_xml": doc_xml,
+                "transcript_url": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/url/text()")[0],
+                "file_name": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/fileName/text()")[0],
+                "pagestatus": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/status/text()")[0],
+                "user": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/userName/text()")[0],
+                "timestamp": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/timestamp/text()")[0],
+                "md5sum": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/md5Sum/text()")[0],
+                "img_url": doc_xml.xpath("./url/text()")[0],
+                "extra_info": self.get_doc_md(doc_id, col_id=col_id)}
             return result
         else:
             return response.ok
