@@ -5,25 +5,20 @@ with open("README.md") as readme_file:
 
 
 setup(
-    name="acdh-transkribus-utils",
-    version="2.11",
+    name="pageplus-transkribus-utils",
+    version="0.1",
     description="""some utility function to interact with the Transkribus-API""",
     long_description=readme,
     long_description_content_type="text/markdown",
-    author="Peter Andorfer, Matthias Schlögl, Carl Friedrich Haak",
-    author_email="peter.andorfer@oeaw.ac.at",
-    url="https://github.com/acdh-oeaw/acdh-transkribus-utils",
+    author="Jan Kamlah",
+    original_author="Peter Andorfer, Matthias Schlögl, Carl Friedrich Haak",
+    author_email="jan.kamlah@uni-mannheim.de",
+    url="https://github.com/jkamlah/PagePlus-transkribus-utils",
     packages=[
         "transkribus_utils",
     ],
-    entry_points={
-        "console_scripts": [
-            "import-goobi-mets-to-transkribus=transkribus_utils.cli:import_goobi_mets_to_transkribus",
-        ]
-    },
     include_package_data=True,
-    install_requires=["acdh-xml-pyutils", "click"],
     license="MIT",
     zip_safe=False,
-    keywords="acdh-transkribus-utils",
+    keywords="pageplus-transkribus-utils",
 )

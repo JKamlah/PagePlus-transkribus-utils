@@ -1,8 +1,20 @@
-from acdh_xml_pyutils.xml import XMLReader
+from lxml import ET
 
-GOOBI_IIIF_PATTERN = "https://viewer.acdh.oeaw.ac.at/viewer/api/v1/records/{}/files/images/{}/full/full/0/default.jpg"  # noqa
-
-
+def parse_mets_url(mets_url):
+    r = requests.get(
+        mets_url,
+        headers={
+            "Content-type": "application/xml; charset=utf-8",
+            "Accept-Charset": "utf-8",
+        },
+    )
+    try:
+        mets = ET.fromstring(r.content.decode("utf-8"))
+    except ValueError:
+        mets = ET.fromstring(r.content.decode("utf-8").encode("utf-8"))
+    return mets
+    
+    
 def make_nsmap(base_nsmap=None):
     """extends given ns-map with mods/mets/xlinks ns"""
     if base_nsmap is None:
@@ -17,13 +29,13 @@ def make_nsmap(base_nsmap=None):
 def get_title_from_mets(
     mets_url, title_xpaht=".//mods:title/text()", nsmap=make_nsmap()
 ):
-    doc = XMLReader(mets_url)
+    doc = parse_mets_url(mets_url)
     tree = doc.tree
     mets_title = tree.xpath(title_xpaht, namespaces=nsmap)[0]
     return mets_title
 
 
-def remove_unresolved_fptrs(doc: XMLReader, nsmap=make_nsmap()):
+def remove_unresolved_fptrs(doc: ET, nsmap=make_nsmap()):
     """deltes fptr-elemets referencing an id that can't be resolved in doc"""
     # # find all existing fptr FILEID-attribute values
     fptr_target_ids = doc.tree.xpath("//mets:div/mets:fptr/@FILEID", namespaces=nsmap)
@@ -37,9 +49,9 @@ def remove_unresolved_fptrs(doc: XMLReader, nsmap=make_nsmap()):
 
 
 def replace_img_urls_in_mets(
-    mets_url, replacement_pattern=GOOBI_IIIF_PATTERN, nsmap=make_nsmap()
+    mets_url, replacement_pattern='', nsmap=make_nsmap()
 ):
-    doc = XMLReader(mets_url)
+    doc = parse_mets_url(mets_url)
     new_uris = []
     for x in doc.tree.xpath(
         ".//mets:fileGrp[@USE='PRESENTATION']//mets:FLocat/@xlink:href",
@@ -53,4 +65,4 @@ def replace_img_urls_in_mets(
     ):
         x.attrib["{http://www.w3.org/1999/xlink}href"] = new_uris[i]
     remove_unresolved_fptrs(doc)
-    return doc.return_string()
+    return doc.return_byte_like_object().decode("utf-8")

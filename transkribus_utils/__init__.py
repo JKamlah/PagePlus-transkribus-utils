@@ -1,1 +1,1 @@
-from .transkribus_utils import ACDHTranskribusUtils  # noqa:
+from .transkribus_utils import PagePlusTranskribusUtils  # noqa:

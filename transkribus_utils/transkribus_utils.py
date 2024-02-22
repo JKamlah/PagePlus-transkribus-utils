@@ -14,7 +14,7 @@ crowd_base_url = (
 )
 
 
-class ACDHTranskribusUtils:
+class PagePlusTranskribusUtils:
     def login(self, user, pw):
         """log in function
         :param user: Your TRANSKRIBUS user name, e.g. my.mail@whatever.com
@@ -31,14 +31,14 @@ class ACDHTranskribusUtils:
             return cookies
         elif res.status_code == 403:
             raise Exception(
-                f"Unable to authenticate to the Trancribus-server ({request_url}) with the provided credentials."
+                f"Unable to authenticate to the Trankribus-server ({request_url}) with the provided credentials."
                 "\nCheck if you provided the correct username & password."
                 "\nPasswords/usernames containing special characters, spaces etc. may cause this behaviour. "
                 "So you might need to change your password."
             )
         else:
             raise Exception(
-                f"Login at Transcribus-server ({request_url}) failed with unexspected http-status code '{res.status_code}'."  # noqa
+                f"Login at Transkribus-server ({request_url}) failed with unexspected http-status code '{res.status_code}'."  # noqa
             )
 
     def ft_search(self, **kwargs):
@@ -53,7 +53,7 @@ class ACDHTranskribusUtils:
         else:
             return False
         querystring["type"] = "LinesLc"
-        print(querystring)
+        #print(querystring)
         response = requests.request(
             "GET", url, cookies=self.login_cookie, params=querystring
         )
@@ -85,7 +85,6 @@ class ACDHTranskribusUtils:
         :return: A dict with listing the collections
         """
         url = f"{self.base_url}/collections/{col_id}/list"
-        print(url)
         response = requests.get(url, cookies=self.login_cookie)
         return response.json()
 
@@ -148,8 +147,21 @@ class ACDHTranskribusUtils:
             result["transcript_url"] = doc_xml.xpath(
                 "//tsList/transcripts[1]/url/text()"
             )[0]
-            result["thumb_url"] = doc_xml.xpath("./thumbUrl/text()")[0]
-            result["img_url"] = doc_xml.xpath("./url/text()")[0]
+            result["fileName"] = doc_xml.xpath(
+                "//tsList/transcripts[1]/fileName/text()"
+            )[0]
+            result["pagestatus"] = doc_xml.xpath(
+                "//tsList/transcripts[1]/status/text()"
+            )[0]
+            result["user"] = doc_xml.xpath(
+                "//tsList/transcripts[1]/userName/text()"
+            )[0]
+            result["timestamp"] = doc_xml.xpath(
+                "//tsList/transcripts[1]/timestamp/text()"
+            )[0]
+            result["md5Sum"] = doc_xml.xpath(
+                "//tsList/transcripts[1]/md5Sum/text()"
+            )[0]
             result["img_url"] = doc_xml.xpath("./url/text()")[0]
             result["extra_info"] = self.get_doc_md(
                 doc_id, col_id=col_id
@@ -170,7 +182,8 @@ class ACDHTranskribusUtils:
         url = md["transcript_url"]
         response = requests.get(url, cookies=self.login_cookie)
         if response.ok:
-            page = ET.fromstring(response.text.encode("utf8"))
+            md["page_xml_string"] = response.text.encode("utf8")
+            page = ET.fromstring(md["page_xml_string"])
             md["page_xml"] = page
             md["transcript"] = page.xpath(
                 ".//page:TextLine//page:Unicode/text()", namespaces=nsmap
@@ -221,7 +234,7 @@ class ACDHTranskribusUtils:
                 f.write(ET.tostring(mets_dict["doc_xml"]))
             return file_name
         else:
-            print(f"{file_path} does not exist")
+            #print(f"{file_path} does not exist")
             return None
 
     def get_image_names(self, doc_id, col_id):
@@ -259,7 +272,7 @@ class ACDHTranskribusUtils:
                 f.write(ET.tostring(root))
             return file_name
         else:
-            print(f"{file_path} does not exist")
+            #print(f"{file_path} does not exist")
             return None
 
     def collection_to_mets(self, col_id, file_path=".", filter_by_doc_ids=[]):
@@ -279,19 +292,19 @@ class ACDHTranskribusUtils:
         if filter_by_doc_ids:
             filter_as_int = [int(x) for x in filter_by_doc_ids]
             doc_ids = [x for x in doc_ids if int(x) in filter_as_int]
-        print(f"{len(doc_ids)} to download")
+        #print(f"{len(doc_ids)} to download")
         counter = 1
         for doc_id in doc_ids:
             try:
                 save_mets = self.save_mets_to_file(doc_id, col_id, file_path=col_dir)
             except Exception as e:
-                print(f"failed to save mets for DOC-ID: {doc_id} in COLLECTION: {col_id} due to ERROR: {e}")
+                #print(f"failed to save mets for DOC-ID: {doc_id} in COLLECTION: {col_id} due to ERROR: {e}")
                 counter += 1
                 continue
             file_list = self.save_image_names_to_file(doc_id, col_id, file_path=col_dir)
-            print(f"saving: {save_mets}")
-            print(f"saving: {file_list}")
-            print(f"{counter}/{len(doc_ids)}")
+            #print(f"saving: {save_mets}")
+            #print(f"saving: {file_list}")
+            #print(f"{counter}/{len(doc_ids)}")
             counter += 1
 
         return doc_ids
@@ -332,7 +345,7 @@ class ACDHTranskribusUtils:
         if res.status_code == 200:
             return res.content.decode("utf8")
         else:
-            print("error: ", res.status_code, res.content)
+            #print("error: ", res.status_code, res.content)
             return False
 
     def get_or_create_collection(self, title):
@@ -344,7 +357,7 @@ class ACDHTranskribusUtils:
             col = self.create_collection(title=title)
             return col
         else:
-            print(col)
+            #print(col)
             return col[0]["colId"]
 
     def upload_mets_file_from_url(self, mets_url, col_id, better_images=False):
@@ -479,12 +492,12 @@ class ACDHTranskribusUtils:
         :return: a list dicts
         """
         cols = self.filter_collections_by_name(filter_string)
-        print(f"found {len(cols)} matching {filter_string}")
+        #print(f"found {len(cols)} matching {filter_string}")
         docs = []
         for x in cols:
             col_id = x["colId"]
             doc_list = self.list_docs(col_id)
-            print(f"processing {len(doc_list)} documents from collection {col_id}")
+            #print(f"processing {len(doc_list)} documents from collection {col_id}")
             for y in doc_list:
                 transcribed = False
                 doc_id = y["docId"]
@@ -563,8 +576,6 @@ class ACDHTranskribusUtils:
                 )
         if goobi_base_url is None:
             goobi_base_url = os.environ.get("GOOBI_BASE_URL", None)
-            if goobi_base_url is None:
-                print("WARNING: Goobi url not set")
         self.base_url = transkribus_base_url
         self.login_cookie = self.login(user, password)
         if goobi_base_url is not None:
