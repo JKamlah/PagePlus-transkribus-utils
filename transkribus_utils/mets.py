@@ -1,4 +1,4 @@
-from lxml import ET
+from lxml.etree import ET
 
 def parse_mets_url(mets_url):
     r = requests.get(
