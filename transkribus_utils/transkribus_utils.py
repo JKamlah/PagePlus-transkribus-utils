@@ -88,7 +88,7 @@ class PagePlusTranskribusUtils:
         response = requests.get(url, cookies=self.login_cookie)
         return response.json()
 
-    def get_doc_md(self, doc_id, col_id):
+    def get_doc_md(self, col_id, doc_id):
         """Helper function to interact with TRANSKRIBUS document metadata endpoint
         :param col_id: The ID of a TRANSKRIBUS Collection
         :param doc_id: The ID of TRANSKRIBUS Document
@@ -99,7 +99,18 @@ class PagePlusTranskribusUtils:
         response = requests.get(url, cookies=self.login_cookie)
         return response.json()
 
-    def get_doc_overview_md(self, doc_id, col_id):
+    def get_pageIds(self, col_id, doc_id):
+        """Helper function to interact with TRANSKRIBUS document metadata endpoint
+        :param col_id: The ID of a TRANSKRIBUS Collection
+        :param doc_id: The ID of TRANSKRIBUS Document
+        :return: A dict with basic metadata of a transkribus Document
+        """
+        url = f"{tsclient.base_url}/collections/{collection_id}/{document_id}/pageIds"
+        response = requests.get(url, cookies=tsclient.login_cookie).json()
+        return response.json()
+
+
+    def get_doc_overview_md(self, col_id, doc_id):
         """Helper function to interact with TRANSKRIBUS document endpoint
         :param col_id: The ID of a TRANSKRIBUS Collection
         :param doc_id: The ID of TRANSKRIBUS Document
@@ -124,7 +135,7 @@ class PagePlusTranskribusUtils:
         else:
             return response.ok
 
-    def get_fulldoc_md(self, doc_id, col_id, page_id="1", transcript="1"):
+    def get_fulldoc_md(self, col_id, doc_id, page_id="1", transcript="1"):
         """Helper function to interact with TRANSKRIBUS document endpoint
         :param col_id: The ID of a TRANSKRIBUS Collection
         :param doc_id: The ID of TRANSKRIBUS Document
@@ -207,7 +218,7 @@ class PagePlusTranskribusUtils:
             result = {"doc_xml": None, "doc_id": doc_id}
         return result
 
-    def save_mets_to_file(self, doc_id, col_id, file_path="."):
+    def save_mets_to_file(self, col_id, doc_id, file_path="."):
         """Saves the METS file of a Document
         :param col_id: The ID of a TRANSKRIBUS Collection
         :param doc_id: The ID of TRANSKRIBUS Document
@@ -223,7 +234,7 @@ class PagePlusTranskribusUtils:
             #print(f"{file_path} does not exist")
             return None
 
-    def get_image_names(self, doc_id, col_id):
+    def get_image_names(self, col_id, doc_id):
         """Get images names for Document
         :param col_id: The ID of a TRANSKRIBUS Collection
         :param doc_id: The ID of TRANSKRIBUS Document
@@ -237,7 +248,7 @@ class PagePlusTranskribusUtils:
             result = []
         return result
 
-    def save_image_names_to_file(self, doc_id, col_id, file_path="."):
+    def save_image_names_to_file(self, col_id, doc_id, file_path="."):
         """Saves the METS file of a Document
         :param col_id: The ID of a TRANSKRIBUS Collection
         :param doc_id: The ID of TRANSKRIBUS Document
