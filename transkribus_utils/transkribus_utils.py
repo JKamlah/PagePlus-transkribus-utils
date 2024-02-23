@@ -3,6 +3,7 @@ import os
 import requests
 import lxml.etree as ET
 from urllib.parse import unquote
+from pathlib import Path
 import re
 
 from .mets import get_title_from_mets, replace_img_urls_in_mets
