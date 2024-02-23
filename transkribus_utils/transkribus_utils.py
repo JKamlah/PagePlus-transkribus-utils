@@ -2,6 +2,7 @@ import io
 import os
 import requests
 import lxml.etree as ET
+from urllib.parse import unquote
 import re
 
 from .mets import get_title_from_mets, replace_img_urls_in_mets
@@ -13,6 +14,9 @@ crowd_base_url = (
     "https://transkribus.eu/r/read/sandbox/application/?colId={}&docId={}&pageId={}"
 )
 
+import logging
+import requests
+from typing import Dict, Optional, Any
 
 class PagePlusTranskribusUtils:
     def login(self, user, pw):
@@ -231,7 +235,7 @@ class PagePlusTranskribusUtils:
                 f.write(ET.tostring(mets_dict["doc_xml"]))
             return file_name
         else:
-            #print(f"{file_path} does not exist")
+            print(f"{file_path} does not exist")
             return None
 
     def get_image_names(self, col_id, doc_id):
@@ -269,8 +273,35 @@ class PagePlusTranskribusUtils:
                 f.write(ET.tostring(root))
             return file_name
         else:
-            #print(f"{file_path} does not exist")
+            print(f"{file_path} does not exist")
             return None
+
+    def save_image_urls_to_file(self, url_list: dict, file_path: Path = ".", raw_image: bool = True):
+        """Saves list of image urls to file
+        :return: The full filename
+        """
+        file_path = Path(file_path)
+        if not file_path.exists():
+                print("Path not found!")
+        for url in url_list:
+            # If view urls are provided and raw image are needed
+            if raw_image:
+                url = url.replace('&fileType=view', '')
+            # Send a GET request to the URL
+            res = requests.get(url, allow_redirects=True)
+            # Try to extract the filename from the Content-Disposition header
+            content_disposition = res.headers.get('content-disposition')
+            # Extract the filename and unquote any URL-encoded characters
+            filename = content_disposition.split('filename=')[-1].strip('"\'')
+            filename = unquote(filename)
+            # Write the content of the response to a file with the extracted filename
+            if file_path.is_file():
+                file_path = file_path.parent()
+            file_path = file_path.absolute().joinpath(filename)
+            with open(file_path, 'wb') as fd:
+                for chunk in res.iter_content(10240):
+                    fd.write(chunk)
+            print(f'Image successfully downloaded and saved as {file_path}')
 
     def collection_to_mets(self, col_id, file_path=".", filter_by_doc_ids=[]):
         """Saves METS files of all Documents from a TRANSKRIBUS Collection
@@ -289,21 +320,16 @@ class PagePlusTranskribusUtils:
         if filter_by_doc_ids:
             filter_as_int = [int(x) for x in filter_by_doc_ids]
             doc_ids = [x for x in doc_ids if int(x) in filter_as_int]
-        #print(f"{len(doc_ids)} to download")
         counter = 1
         for doc_id in doc_ids:
             try:
                 save_mets = self.save_mets_to_file(doc_id, col_id, file_path=col_dir)
             except Exception as e:
-                #print(f"failed to save mets for DOC-ID: {doc_id} in COLLECTION: {col_id} due to ERROR: {e}")
+                print(f"failed to save mets for DOC-ID: {doc_id} in COLLECTION: {col_id} due to ERROR: {e}")
                 counter += 1
                 continue
-            file_list = self.save_image_names_to_file(doc_id, col_id, file_path=col_dir)
-            #print(f"saving: {save_mets}")
-            #print(f"saving: {file_list}")
-            #print(f"{counter}/{len(doc_ids)}")
+            self.save_image_names_to_file(doc_id, col_id, file_path=col_dir)
             counter += 1
-
         return doc_ids
 
     def search_for_document(self, title, col_id):
