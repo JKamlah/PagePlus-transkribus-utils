@@ -304,6 +304,91 @@ class PagePlusTranskribusUtils:
                     fd.write(chunk)
             print(f'Image successfully downloaded and saved as {file_path}')
 
+
+    def postPageTranscript(self, colId, docId, pnum, sXMlTranscript
+                                       , bOverwrite=None
+                                       , sNote=None
+                                       , parentId=None
+                                       , bPnumIsPageId=None
+                                       , sToolName=None
+                                       , status = None
+                                       , bEncoded=False):  #bEncoded is not part of official API, it is a convenience for Pythonic API
+        """
+        Post a new transcript for a page
+        sXmlTranscript is a Python Unicode string
+
+        return a serialized XMl like:
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?><trpTranscriptMetadata><tsId>424778</tsId><parentTsId>-1</parentTsId><key>IXQDKIMHCKSJAAVUZLWMIKRV</key><pageId>252384</pageId><docId>8255</docId><pageNr>1</pageNr><url>https://dbis-thure.uibk.ac.at/f/Get?id=IXQDKIMHCKSJAAVUZLWMIKRV</url><status>IN_PROGRESS</status><userName>jean-luc.meunier@xrce.xerox.com</userName><userId>3556</userId><timestamp>1481281786096</timestamp><md5Sum></md5Sum><nrOfRegions>4</nrOfRegions><nrOfTranscribedRegions>3</nrOfTranscribedRegions><nrOfWordsInRegions>131</nrOfWordsInRegions><nrOfLines>41</nrOfLines><nrOfTranscribedLines>40</nrOfTranscribedLines><nrOfWordsInLines>168</nrOfWordsInLines><nrOfWords>0</nrOfWords><nrOfTranscribedWords>0</nrOfTranscribedWords></trpTranscriptMetadata>
+
+            <trpTranscriptMetadata>
+                <tsId>424778</tsId>
+                <parentTsId>-1</parentTsId>
+                <key>IXQDKIMHCKSJAAVUZLWMIKRV</key>
+                <pageId>252384</pageId>
+                <docId>8255</docId>
+                <pageNr>1</pageNr>
+                <url>https://dbis-thure.uibk.ac.at/f/Get?id=IXQDKIMHCKSJAAVUZLWMIKRV</url>
+                <status>IN_PROGRESS</status>
+                <userName>jean-luc.meunier@xrce.xerox.com</userName>
+                <userId>3556</userId>
+                <timestamp>1481281786096</timestamp>
+                <md5Sum/>
+                <nrOfRegions>4</nrOfRegions>
+                <nrOfTranscribedRegions>3</nrOfTranscribedRegions>
+                <nrOfWordsInRegions>131</nrOfWordsInRegions>
+                <nrOfLines>41</nrOfLines>
+                <nrOfTranscribedLines>40</nrOfTranscribedLines>
+                <nrOfWordsInLines>168</nrOfWordsInLines>
+                <nrOfWords>0</nrOfWords>
+                <nrOfTranscribedWords>0</nrOfTranscribedWords>
+            </trpTranscriptMetadata>
+        """
+        self._assertLoggedIn()
+        if not bEncoded: self._assertUnicode(sXMlTranscript)
+        myReq = self.sREQ_collections_postPageTranscript % (colId,docId,pnum)
+        params = self._buidlParamsDic(overwrite=bOverwrite, note=sNote, parent=parentId, nrIsPageId=bPnumIsPageId,toolName=sToolName, status=status)
+        if bEncoded:
+            resp = self._POST(myReq, params=params, data=sXMlTranscript)
+        else:
+            resp = self._POST(myReq, params=params, data=sXMlTranscript.encode(utf8))
+        resp.raise_for_status()
+        return resp.text
+
+    from enum import Enum
+    class Status(str, Enum):
+        """
+        Transkribus (page) status
+        """
+        NEW = "NEW"
+        INPROGRESS = "INPROGESS"
+        DONE = "DONE"
+        FINAL = "FINAL"
+        GT = "GT"
+    def update_transcription(self, file_path, col_id, doc_id, pageNr,
+                             overwrite: bool = None,
+                             status: Status = None,
+                             note: str = "",
+                             parent: int = -1,
+                             nrIsPageId: bool = False,
+                             toolName: str = None):
+        """Helper function to interact with TRANSKRIBUS document endpoint
+        :param file_path: Path to PAGE-XML file
+        :param col_id: The ID of a TRANSKRIBUS Collection
+        :param doc_id: The ID of TRANSKRIBUS Document
+        :param pageNr: The page number of the Document
+        :return: A dict with basic metadata of a transkribus Document
+        """
+        file_path = Path(file_path)
+        if not file_path.exists():
+            return
+        page_xml = file_path.open('r', encoding="utf-8").read()
+        url = f"https://transkribus.eu/TrpServer/rest/collections/{col_id}/{doc_id}/{pageNr}/text"
+        params = {k: v for k, v in {'overwrite': overwrite, 'note': note, 'parent': parent, 'nrIsPageId': nrIsPageId,
+                                    'toolName': toolName, 'status': status}.items() if v is not None}
+        res = requests.post(url, cookies=self.login_cookie, params=params, data=page_xml)
+        res.raise_for_status()
+
+
     def collection_to_mets(self, col_id, file_path=".", filter_by_doc_ids=[]):
         """Saves METS files of all Documents from a TRANSKRIBUS Collection
         :param col_id: The ID of a TRANSKRIBUS Collection
