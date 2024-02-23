@@ -162,7 +162,7 @@ class PagePlusTranskribusUtils:
                 "timestamp": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/timestamp/text()")[0],
                 "md5sum": doc_xml.xpath(f"//tsList/transcripts[{transcript}]/md5Sum/text()")[0],
                 "img_url": doc_xml.xpath("./url/text()")[0],
-                "extra_info": self.get_doc_md(doc_id, col_id=col_id)}
+                "extra_info": self.get_doc_md(col_id, doc_id)}
             return result
         else:
             return response.ok
