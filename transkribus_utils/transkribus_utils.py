@@ -276,7 +276,7 @@ class PagePlusTranskribusUtils:
             print(f"{file_path} does not exist")
             return None
 
-    def save_image_urls_to_file(self, url_list: dict, file_path: Path = ".", raw_image: bool = True):
+    def save_image_urls_to_file(self, url_list: list, file_path: Path = ".", raw_image: bool = True):
         """Saves list of image urls to file
         :return: The full filename
         """
