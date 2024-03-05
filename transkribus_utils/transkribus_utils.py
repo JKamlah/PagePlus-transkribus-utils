@@ -112,7 +112,7 @@ class PagePlusTranskribusUtils:
         """
         url = f"{self.base_url}/collections/{col_id}/{doc_id}/pageIds"
         response = requests.get(url, cookies=self.login_cookie).json()
-        return response.json()
+        return response
 
 
     def get_doc_overview_md(self, col_id, doc_id):
