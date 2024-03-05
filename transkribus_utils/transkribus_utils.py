@@ -110,8 +110,8 @@ class PagePlusTranskribusUtils:
         :param doc_id: The ID of TRANSKRIBUS Document
         :return: A dict with basic metadata of a transkribus Document
         """
-        url = f"{tsclient.base_url}/collections/{collection_id}/{document_id}/pageIds"
-        response = requests.get(url, cookies=tsclient.login_cookie).json()
+        url = f"{self.base_url}/collections/{collection_id}/{document_id}/pageIds"
+        response = requests.get(url, cookies=self.login_cookie).json()
         return response.json()
 
 
