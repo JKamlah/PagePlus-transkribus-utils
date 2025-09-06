@@ -127,7 +127,6 @@ class PagePlusTranskribusUtils:
             result = {}
             result["trp_return"] = response.json()
             page_list = result["trp_return"]["pageList"]["pages"]
-            print(page_list)
             result["pages"] = [
                 {
                     "page_id": x["pageId"],
