@@ -127,12 +127,15 @@ class PagePlusTranskribusUtils:
             result = {}
             result["trp_return"] = response.json()
             page_list = result["trp_return"]["pageList"]["pages"]
+            print(page_list)
             result["pages"] = [
                 {
                     "page_id": x["pageId"],
                     "doc_id": x["docId"],
                     "page_nr": x["pageNr"],
                     "thumb": x["thumbUrl"],
+                    "file_name": x['tsList']["transcripts"][0]["fileName"],
+                    "imgFileName": x["imgFileName"],
                 }
                 for x in page_list
             ]
